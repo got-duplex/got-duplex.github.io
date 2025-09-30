@@ -1,173 +1,80 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="description"
-        content="Deformable Neural Radiance Fields creates free-viewpoint portraits (nerfies) from casually captured videos.">
-  <meta name="keywords" content="Nerfies, D-NeRF, NeRF">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Nerfies: Deformable Neural Radiance Fields</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GoT Duplex: Conversational Behavior Reasoning</title>
+  <meta name="description" content="Interactive GoT demo: play audio and scrub by second to see high/low-level labels, rationale text, and raw/updated weight & node graphs." />
+  <meta name="keywords" content="GoT, conversational behavior, reasoning, graph of thoughts, demo" />
 
-  <!-- Global site tag (gtag.js) - Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-PYVRSFMDRL"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
+  <!-- Minimal deps -->
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
 
-    function gtag() {
-      dataLayer.push(arguments);
+  <style>
+    :root{
+      --sky-bg:#E9F3FF;  /* 天蓝背景 */
+      --sky-line:#2F80ED;/* 天蓝竖线/主色 */
+      --sky-text:#1E40AF;/* 天蓝文字 */
+      --box-border:#E6E8EB;
+    }
+    body{font-family:"Google Sans","Noto Sans",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    .navbar{box-shadow:none}
+    .publication-title{letter-spacing:.2px}
+
+    /* 让 Plyr 进度条左右贴边 */
+    .plyr--audio .plyr__controls{padding-left:0!important;padding-right:0!important}
+
+    /* Rationale 盒子 */
+    .got-rbox{border:1px solid var(--box-border);border-radius:14px;padding:14px;background:#fcfcfd}
+    .got-row{display:grid;grid-template-columns:120px 1fr;gap:10px;align-items:center;margin:10px 0}
+    .got-key{color:#6b7280;font-weight:700;text-transform:uppercase;font-size:.8rem;letter-spacing:.04em}
+
+    /* 小方块 chip（High/Low 用） */
+    .chip{
+      display:inline-block; padding:6px 10px; border-radius:10px;
+      background:var(--sky-bg); color:var(--sky-text); border:1px solid #CFE2FF;
+      font-weight:600; line-height:1; white-space:nowrap;
     }
 
-    gtag('js', new Date());
+    /* 文本信息框（左侧天蓝竖线） */
+    .got-msg{
+      background:var(--sky-bg); border-left:4px solid var(--sky-line);
+      border-radius:10px; padding:10px 12px; color:var(--sky-text); margin:0;
+    }
 
-    gtag('config', 'G-PYVRSFMDRL');
-  </script>
-
-  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
-        rel="stylesheet">
-
-  <link rel="stylesheet" href="./static/css/bulma.min.css">
-  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
-  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
-  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
-  <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
-  <link rel="stylesheet" href="./static/css/index.css">
-  <link rel="icon" href="./static/images/favicon.svg">
-
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-  <script defer src="./static/js/fontawesome.all.min.js"></script>
-  <script src="./static/js/bulma-carousel.min.js"></script>
-  <script src="./static/js/bulma-slider.min.js"></script>
-  <script src="./static/js/index.js"></script>
+    /* 四图宫格 */
+    .got-grid{display:grid;grid-template-columns:repeat(2,minmax(260px,1fr));gap:16px;margin-top:16px}
+    .got-card{border:1px solid var(--box-border);border-radius:12px;padding:10px;background:#fff}
+    .got-cap{margin:0 0 6px 0;font-weight:600}
+    .got-img{width:100%;max-width:760px;height:auto;border-radius:8px}
+    @media (max-width:720px){.got-grid{grid-template-columns:1fr}}
+  </style>
 </head>
 <body>
 
+<!-- Navbar：只留 Demo -->
 <nav class="navbar" role="navigation" aria-label="main navigation">
-  <div class="navbar-brand">
-    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
-      <span aria-hidden="true"></span>
-      <span aria-hidden="true"></span>
-      <span aria-hidden="true"></span>
-    </a>
-  </div>
   <div class="navbar-menu">
-    <div class="navbar-start" style="flex-grow: 1; justify-content: center;">
-      <a class="navbar-item" href="https://keunhong.com">
-      <span class="icon">
-          <i class="fas fa-home"></i>
-      </span>
-      </a>
-
-      <div class="navbar-item has-dropdown is-hoverable">
-        <a class="navbar-link">
-          More Research
-        </a>
-        <div class="navbar-dropdown">
-          <a class="navbar-item" href="https://hypernerf.github.io">
-            HyperNeRF
-          </a>
-          <a class="navbar-item" href="https://nerfies.github.io">
-            Nerfies
-          </a>
-          <a class="navbar-item" href="https://latentfusion.github.io">
-            LatentFusion
-          </a>
-          <a class="navbar-item" href="https://photoshape.github.io">
-            PhotoShape
-          </a>
-        </div>
-      </div>
+    <div class="navbar-start" style="flex-grow:1;justify-content:center;gap:10px;">
+      <a class="navbar-item" href="#got-demo">Demo</a>
     </div>
-
   </div>
 </nav>
 
-
+<!-- Hero / Title -->
 <section class="hero">
   <div class="hero-body">
     <div class="container is-max-desktop">
       <div class="columns is-centered">
         <div class="column has-text-centered">
-          <h1 class="title is-1 publication-title">Nerfies: Deformable Neural Radiance Fields</h1>
-          <div class="is-size-5 publication-authors">
-            <span class="author-block">
-              <a href="https://keunhong.com">Keunhong Park</a><sup>1</sup>,</span>
-            <span class="author-block">
-              <a href="https://utkarshsinha.com">Utkarsh Sinha</a><sup>2</sup>,</span>
-            <span class="author-block">
-              <a href="https://jonbarron.info">Jonathan T. Barron</a><sup>2</sup>,
-            </span>
-            <span class="author-block">
-              <a href="http://sofienbouaziz.com">Sofien Bouaziz</a><sup>2</sup>,
-            </span>
-            <span class="author-block">
-              <a href="https://www.danbgoldman.com">Dan B Goldman</a><sup>2</sup>,
-            </span>
-            <span class="author-block">
-              <a href="https://homes.cs.washington.edu/~seitz/">Steven M. Seitz</a><sup>1,2</sup>,
-            </span>
-            <span class="author-block">
-              <a href="http://www.ricardomartinbrualla.com">Ricardo Martin-Brualla</a><sup>2</sup>
-            </span>
-          </div>
-
-          <div class="is-size-5 publication-authors">
-            <span class="author-block"><sup>1</sup>University of Washington,</span>
-            <span class="author-block"><sup>2</sup>Google Research</span>
-          </div>
-
+          <h1 class="title is-1 publication-title">GoT Duplex: Conversational Behavior Reasoning</h1>
           <div class="column has-text-centered">
-            <div class="publication-links">
-              <!-- PDF Link. -->
-              <span class="link-block">
-                <a href="https://arxiv.org/pdf/2011.12948"
-                   class="external-link button is-normal is-rounded is-dark">
-                  <span class="icon">
-                      <i class="fas fa-file-pdf"></i>
-                  </span>
-                  <span>Paper</span>
-                </a>
-              </span>
-              <span class="link-block">
-                <a href="https://arxiv.org/abs/2011.12948"
-                   class="external-link button is-normal is-rounded is-dark">
-                  <span class="icon">
-                      <i class="ai ai-arxiv"></i>
-                  </span>
-                  <span>arXiv</span>
-                </a>
-              </span>
-              <!-- Video Link. -->
-              <span class="link-block">
-                <a href="https://www.youtube.com/watch?v=MrKrnHhk8IA"
-                   class="external-link button is-normal is-rounded is-dark">
-                  <span class="icon">
-                      <i class="fab fa-youtube"></i>
-                  </span>
-                  <span>Video</span>
-                </a>
-              </span>
-              <!-- Code Link. -->
-              <span class="link-block">
-                <a href="https://github.com/google/nerfies"
-                   class="external-link button is-normal is-rounded is-dark">
-                  <span class="icon">
-                      <i class="fab fa-github"></i>
-                  </span>
-                  <span>Code</span>
-                  </a>
-              </span>
-              <!-- Dataset Link. -->
-              <span class="link-block">
-                <a href="https://github.com/google/nerfies/releases/tag/0.1"
-                   class="external-link button is-normal is-rounded is-dark">
-                  <span class="icon">
-                      <i class="far fa-images"></i>
-                  </span>
-                  <span>Data</span>
-                  </a>
-            </div>
-
+            <a href="#got-demo" class="button is-dark is-rounded">
+              <span class="icon"><i class="fas fa-magic"></i></span><span>Demo</span>
+            </a>
           </div>
         </div>
       </div>
@@ -175,316 +82,147 @@
   </div>
 </section>
 
-<section class="hero teaser">
+<!-- ===== GoT per-second demo ===== -->
+<section class="section" id="got-demo">
   <div class="container is-max-desktop">
-    <div class="hero-body">
-      <video id="teaser" autoplay muted loop playsinline height="100%">
-        <source src="./static/videos/teaser.mp4"
-                type="video/mp4">
-      </video>
-      <h2 class="subtitle has-text-centered">
-        <span class="dnerf">Nerfies</span> turns selfie videos from your phone into
-        free-viewpoint
-        portraits.
-      </h2>
+    <h2 class="title is-3">Interactive GoT Viewer (1s granularity)</h2>
+
+    <!-- 只保留音频播放器（使用其自带进度条拖动） -->
+    <audio id="aud" controls playsinline>
+      <source src="assets/audio/clip.mp3" type="audio/mpeg" />
+      <source src="assets/audio/clip.wav" type="audio/wav" />
+      Your browser does not support the audio element.
+    </audio>
+
+    <!-- Rationale：T / High / Low / Text -->
+    <div class="got-rbox">
+      <div class="got-row">
+        <div class="got-key">T</div>
+        <div><span id="tval">0</span> s</div>
+      </div>
+      <div class="got-row">
+        <div class="got-key">High-level</div>
+        <div><span id="hi" class="chip">—</span></div>
+      </div>
+      <div class="got-row">
+        <div class="got-key">Low-level</div>
+        <div><span id="lo" class="chip">—</span></div>
+      </div>
+      <div class="got-row">
+        <div class="got-key">Text</div>
+        <div><div id="rat" class="got-msg">—</div></div>
+      </div>
+    </div>
+
+    <!-- 四图：Raw/Updated × Weight/Node -->
+    <div class="got-grid">
+      <figure class="got-card">
+        <figcaption class="got-cap">Raw · Weight matrix</figcaption>
+        <img id="img-raw-w" class="got-img" src="assets/alpha_raw_weight/000.png" alt="Raw weight matrix at t=0" loading="lazy" />
+      </figure>
+      <figure class="got-card">
+        <figcaption class="got-cap">Raw · Node graph</figcaption>
+        <img id="img-raw-n" class="got-img" src="assets/alpha_raw_node/000.png" alt="Raw node graph at t=0" loading="lazy" />
+      </figure>
+      <figure class="got-card">
+        <figcaption class="got-cap">Updated · Weight matrix</figcaption>
+        <img id="img-upd-w" class="got-img" src="assets/alpha_upd_weight/000.png" alt="Updated weight matrix at t=0" loading="lazy" />
+      </figure>
+      <figure class="got-card">
+        <figcaption class="got-cap">Updated · Node graph</figcaption>
+        <img id="img-upd-n" class="got-img" src="assets/alpha_upd_node/000.png" alt="Updated node graph at t=0" loading="lazy" />
+      </figure>
     </div>
   </div>
 </section>
 
+<!-- Plyr JS -->
+<script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+<script>
+(function(){
+  const $  = id => document.getElementById(id);
+  const p3 = n => String(n).padStart(3,'0');
 
-<section class="hero is-light is-small">
-  <div class="hero-body">
-    <div class="container">
-      <div id="results-carousel" class="carousel results-carousel">
-        <div class="item item-steve">
-          <video poster="" id="steve" autoplay controls muted loop playsinline height="100%">
-            <source src="./static/videos/steve.mp4"
-                    type="video/mp4">
-          </video>
-        </div>
-        <div class="item item-chair-tp">
-          <video poster="" id="chair-tp" autoplay controls muted loop playsinline height="100%">
-            <source src="./static/videos/chair-tp.mp4"
-                    type="video/mp4">
-          </video>
-        </div>
-        <div class="item item-shiba">
-          <video poster="" id="shiba" autoplay controls muted loop playsinline height="100%">
-            <source src="./static/videos/shiba.mp4"
-                    type="video/mp4">
-          </video>
-        </div>
-        <div class="item item-fullbody">
-          <video poster="" id="fullbody" autoplay controls muted loop playsinline height="100%">
-            <source src="./static/videos/fullbody.mp4"
-                    type="video/mp4">
-          </video>
-        </div>
-        <div class="item item-blueshirt">
-          <video poster="" id="blueshirt" autoplay controls muted loop playsinline height="100%">
-            <source src="./static/videos/blueshirt.mp4"
-                    type="video/mp4">
-          </video>
-        </div>
-        <div class="item item-mask">
-          <video poster="" id="mask" autoplay controls muted loop playsinline height="100%">
-            <source src="./static/videos/mask.mp4"
-                    type="video/mp4">
-          </video>
-        </div>
-        <div class="item item-coffee">
-          <video poster="" id="coffee" autoplay controls muted loop playsinline height="100%">
-            <source src="./static/videos/coffee.mp4"
-                    type="video/mp4">
-          </video>
-        </div>
-        <div class="item item-toby">
-          <video poster="" id="toby" autoplay controls muted loop playsinline height="100%">
-            <source src="./static/videos/toby2.mp4"
-                    type="video/mp4">
-          </video>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+  const player = new Plyr('#aud');
+  const media  = player.media; // 原生 <audio>
 
+  const TVAL=$('tval'), HI=$('hi'), LO=$('lo'), RAT=$('rat');
+  const RAW_W=$('img-raw-w'), RAW_N=$('img-raw-n'), UPD_W=$('img-upd-w'), UPD_N=$('img-upd-n');
 
-<section class="section">
-  <div class="container is-max-desktop">
-    <!-- Abstract. -->
-    <div class="columns is-centered has-text-centered">
-      <div class="column is-four-fifths">
-        <h2 class="title is-3">Abstract</h2>
-        <div class="content has-text-justified">
-          <p>
-            We present the first method capable of photorealistically reconstructing a non-rigidly
-            deforming scene using photos/videos captured casually from mobile phones.
-          </p>
-          <p>
-            Our approach augments neural radiance fields
-            (NeRF) by optimizing an
-            additional continuous volumetric deformation field that warps each observed point into a
-            canonical 5D NeRF.
-            We observe that these NeRF-like deformation fields are prone to local minima, and
-            propose a coarse-to-fine optimization method for coordinate-based models that allows for
-            more robust optimization.
-            By adapting principles from geometry processing and physical simulation to NeRF-like
-            models, we propose an elastic regularization of the deformation field that further
-            improves robustness.
-          </p>
-          <p>
-            We show that <span class="dnerf">Nerfies</span> can turn casually captured selfie
-            photos/videos into deformable NeRF
-            models that allow for photorealistic renderings of the subject from arbitrary
-            viewpoints, which we dub <i>"nerfies"</i>. We evaluate our method by collecting data
-            using a
-            rig with two mobile phones that take time-synchronized photos, yielding train/validation
-            images of the same pose at different viewpoints. We show that our method faithfully
-            reconstructs non-rigidly deforming scenes and reproduces unseen views with high
-            fidelity.
-          </p>
-        </div>
-      </div>
-    </div>
-    <!--/ Abstract. -->
+  let R=[], Rmap=new Map();
+  let jsonLast=0, audioLast=0, smax=0, lastApplied=-1;
 
-    <!-- Paper video. -->
-    <div class="columns is-centered has-text-centered">
-      <div class="column is-four-fifths">
-        <h2 class="title is-3">Video</h2>
-        <div class="publication-video">
-          <iframe src="https://www.youtube.com/embed/MrKrnHhk8IA?rel=0&amp;showinfo=0"
-                  frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-        </div>
-      </div>
-    </div>
-    <!--/ Paper video. -->
-  </div>
-</section>
+  // 读取 rationales.json
+  fetch('assets/rationales.json')
+    .then(r=>r.json())
+    .then(d=>{
+      R = Array.isArray(d)? d : [];
+      Rmap = new Map(R.map(e => [Number(e.sec), e]));
+      jsonLast = R.reduce((m,e)=>Math.max(m, Number(e.sec)||0), 0);
+      recomputeMax();
+      applySecond(0);
+    })
+    .catch(()=>{ /* ignore */ });
 
+  function recomputeMax(){
+    // 音频与 JSON 都可用时，取较小者作为最大可显示秒
+    audioLast = Math.max(0, Math.floor(player.duration || media.duration || 0));
+    const cands = [jsonLast, audioLast].filter(x=>x>0);
+    smax = cands.length ? Math.min(...cands) : (jsonLast || audioLast || 30);
+  }
 
-<section class="section">
-  <div class="container is-max-desktop">
+  function applySecond(t){
+    if(t === lastApplied) return;
+    lastApplied = t;
+    TVAL.textContent = String(t);
 
-    <div class="columns is-centered">
+    const x = Rmap.get(t) || {};
+    HI.textContent  = x.hi   || '—';
+    LO.textContent  = x.lo   || '—';
+    RAT.textContent = x.text || '—';
 
-      <!-- Visual Effects. -->
-      <div class="column">
-        <div class="content">
-          <h2 class="title is-3">Visual Effects</h2>
-          <p>
-            Using <i>nerfies</i> you can create fun visual effects. This Dolly zoom effect
-            would be impossible without nerfies since it would require going through a wall.
-          </p>
-          <video id="dollyzoom" autoplay controls muted loop playsinline height="100%">
-            <source src="./static/videos/dollyzoom-stacked.mp4"
-                    type="video/mp4">
-          </video>
-        </div>
-      </div>
-      <!--/ Visual Effects. -->
+    RAW_W.src = `assets/alpha_raw_weight/${p3(t)}.png`;
+    RAW_N.src = `assets/alpha_raw_node/${p3(t)}.png`;
+    UPD_W.src = `assets/alpha_upd_weight/${p3(t)}.png`;
+    UPD_N.src = `assets/alpha_upd_node/${p3(t)}.png`;
+  }
 
-      <!-- Matting. -->
-      <div class="column">
-        <h2 class="title is-3">Matting</h2>
-        <div class="columns is-centered">
-          <div class="column content">
-            <p>
-              As a byproduct of our method, we can also solve the matting problem by ignoring
-              samples that fall outside of a bounding box during rendering.
-            </p>
-            <video id="matting-video" controls playsinline height="100%">
-              <source src="./static/videos/matting.mp4"
-                      type="video/mp4">
-            </video>
-          </div>
+  function clampToMax(sec){
+    if(sec < 0) return 0;
+    if(smax > 0 && sec > smax) return smax;
+    return sec;
+  }
 
-        </div>
-      </div>
-    </div>
-    <!--/ Matting. -->
+  // 播放 / 拖动进度条时同步（依赖播放器自带轨道）
+  player.on('ready',         recomputeMax);
+  player.on('loadedmetadata',recomputeMax);
+  player.on('timeupdate', () => {
+    const cur = clampToMax(Math.floor(player.currentTime || media.currentTime || 0));
+    applySecond(cur);
+    preloadNext(cur);
+  });
+  ['seeking','seeked','play','pause'].forEach(ev=>{
+    media.addEventListener(ev, ()=>{
+      const cur = clampToMax(Math.floor(media.currentTime || 0));
+      applySecond(cur);
+    });
+  });
 
-    <!-- Animation. -->
-    <div class="columns is-centered">
-      <div class="column is-full-width">
-        <h2 class="title is-3">Animation</h2>
+  // 预加载下一秒四张图
+  function preloadNext(t){
+    const n=t+1; if(smax && n>smax) return;
+    [
+      `assets/alpha_raw_weight/${p3(n)}.png`,
+      `assets/alpha_raw_node/${p3(n)}.png`,
+      `assets/alpha_upd_weight/${p3(n)}.png`,
+      `assets/alpha_upd_node/${p3(n)}.png`,
+    ].forEach(src => { const im=new Image(); im.loading='eager'; im.src=src; });
+  }
 
-        <!-- Interpolating. -->
-        <h3 class="title is-4">Interpolating states</h3>
-        <div class="content has-text-justified">
-          <p>
-            We can also animate the scene by interpolating the deformation latent codes of two input
-            frames. Use the slider here to linearly interpolate between the left frame and the right
-            frame.
-          </p>
-        </div>
-        <div class="columns is-vcentered interpolation-panel">
-          <div class="column is-3 has-text-centered">
-            <img src="./static/images/interpolate_start.jpg"
-                 class="interpolation-image"
-                 alt="Interpolate start reference image."/>
-            <p>Start Frame</p>
-          </div>
-          <div class="column interpolation-video-column">
-            <div id="interpolation-image-wrapper">
-              Loading...
-            </div>
-            <input class="slider is-fullwidth is-large is-info"
-                   id="interpolation-slider"
-                   step="1" min="0" max="100" value="0" type="range">
-          </div>
-          <div class="column is-3 has-text-centered">
-            <img src="./static/images/interpolate_end.jpg"
-                 class="interpolation-image"
-                 alt="Interpolation end reference image."/>
-            <p class="is-bold">End Frame</p>
-          </div>
-        </div>
-        <br/>
-        <!--/ Interpolating. -->
-
-        <!-- Re-rendering. -->
-        <h3 class="title is-4">Re-rendering the input video</h3>
-        <div class="content has-text-justified">
-          <p>
-            Using <span class="dnerf">Nerfies</span>, you can re-render a video from a novel
-            viewpoint such as a stabilized camera by playing back the training deformations.
-          </p>
-        </div>
-        <div class="content has-text-centered">
-          <video id="replay-video"
-                 controls
-                 muted
-                 preload
-                 playsinline
-                 width="75%">
-            <source src="./static/videos/replay.mp4"
-                    type="video/mp4">
-          </video>
-        </div>
-        <!--/ Re-rendering. -->
-
-      </div>
-    </div>
-    <!--/ Animation. -->
-
-
-    <!-- Concurrent Work. -->
-    <div class="columns is-centered">
-      <div class="column is-full-width">
-        <h2 class="title is-3">Related Links</h2>
-
-        <div class="content has-text-justified">
-          <p>
-            There's a lot of excellent work that was introduced around the same time as ours.
-          </p>
-          <p>
-            <a href="https://arxiv.org/abs/2104.09125">Progressive Encoding for Neural Optimization</a> introduces an idea similar to our windowed position encoding for coarse-to-fine optimization.
-          </p>
-          <p>
-            <a href="https://www.albertpumarola.com/research/D-NeRF/index.html">D-NeRF</a> and <a href="https://gvv.mpi-inf.mpg.de/projects/nonrigid_nerf/">NR-NeRF</a>
-            both use deformation fields to model non-rigid scenes.
-          </p>
-          <p>
-            Some works model videos with a NeRF by directly modulating the density, such as <a href="https://video-nerf.github.io/">Video-NeRF</a>, <a href="https://www.cs.cornell.edu/~zl548/NSFF/">NSFF</a>, and <a href="https://neural-3d-video.github.io/">DyNeRF</a>
-          </p>
-          <p>
-            There are probably many more by the time you are reading this. Check out <a href="https://dellaert.github.io/NeRF/">Frank Dellart's survey on recent NeRF papers</a>, and <a href="https://github.com/yenchenlin/awesome-NeRF">Yen-Chen Lin's curated list of NeRF papers</a>.
-          </p>
-        </div>
-      </div>
-    </div>
-    <!--/ Concurrent Work. -->
-
-  </div>
-</section>
-
-
-<section class="section" id="BibTeX">
-  <div class="container is-max-desktop content">
-    <h2 class="title">BibTeX</h2>
-    <pre><code>@article{park2021nerfies,
-  author    = {Park, Keunhong and Sinha, Utkarsh and Barron, Jonathan T. and Bouaziz, Sofien and Goldman, Dan B and Seitz, Steven M. and Martin-Brualla, Ricardo},
-  title     = {Nerfies: Deformable Neural Radiance Fields},
-  journal   = {ICCV},
-  year      = {2021},
-}</code></pre>
-  </div>
-</section>
-
-
-<footer class="footer">
-  <div class="container">
-    <div class="content has-text-centered">
-      <a class="icon-link"
-         href="./static/videos/nerfies_paper.pdf">
-        <i class="fas fa-file-pdf"></i>
-      </a>
-      <a class="icon-link" href="https://github.com/keunhong" class="external-link" disabled>
-        <i class="fab fa-github"></i>
-      </a>
-    </div>
-    <div class="columns is-centered">
-      <div class="column is-8">
-        <div class="content">
-          <p>
-            This website is licensed under a <a rel="license"
-                                                href="http://creativecommons.org/licenses/by-sa/4.0/">Creative
-            Commons Attribution-ShareAlike 4.0 International License</a>.
-          </p>
-          <p>
-            This means you are free to borrow the <a
-              href="https://github.com/nerfies/nerfies.github.io">source code</a> of this website,
-            we just ask that you link back to this page in the footer.
-            Please remember to remove the analytics code included in the header of the website which
-            you do not want on your website.
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
-</footer>
+  // 首次渲染
+  applySecond(0);
+})();
+</script>
 
 </body>
 </html>
