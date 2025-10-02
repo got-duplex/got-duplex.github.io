@@ -15,9 +15,9 @@
 
   <style>
     :root{
-      --sky-bg:#E9F3FF;  /* 天蓝背景 */
-      --sky-line:#2F80ED;/* 天蓝竖线/主色 */
-      --sky-text:#1E40AF;/* 天蓝文字 */
+      --sky-bg:#E9F3FF;   /* 天蓝背景（用于小方块） */
+      --sky-line:#2F80ED; /* 天蓝竖线主色 */
+      --sky-text:#1E40AF; /* 天蓝文字 */
       --box-border:#E6E8EB;
     }
     body{font-family:"Google Sans","Noto Sans",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
@@ -27,9 +27,28 @@
     /* 让 Plyr 进度条左右贴边 */
     .plyr--audio .plyr__controls{padding-left:0!important;padding-right:0!important}
 
-    /* Rationale 盒子 */
-    .got-rbox{border:1px solid var(--box-border);border-radius:14px;padding:14px;background:#fcfcfd}
-    .got-row{display:grid;grid-template-columns:120px 1fr;gap:10px;align-items:center;margin:10px 0}
+    /* Rationale 盒子：加角标需要相对定位，顶部留白给角标 */
+    .got-rbox{
+      position:relative;
+      border:1px solid var(--box-border);
+      border-radius:14px;
+      padding:22px 14px 14px; /* 顶部多 8px，给角标让位 */
+      background:#fcfcfd;
+    }
+    /* 左上角角标 */
+    .got-head{
+      position:absolute;
+      top:-12px; left:14px;
+      background:#ffffff;
+      color:#1D4ED8;                 /* 蓝-700 */
+      font-weight:700; font-size:.85rem; letter-spacing:.02em;
+      padding:3px 10px; border-radius:10px;
+      border:1px solid #D6E0FF;      /* 淡蓝边 */
+      box-shadow:0 1px 0 rgba(0,0,0,.03);
+      user-select:none;
+    }
+
+    .got-row{display:grid;grid-template-columns:160px 1fr;gap:10px;align-items:center;margin:10px 0}
     .got-key{color:#6b7280;font-weight:700;text-transform:uppercase;font-size:.8rem;letter-spacing:.04em}
 
     /* 小方块 chip（High/Low 用） */
@@ -39,10 +58,14 @@
       font-weight:600; line-height:1; white-space:nowrap;
     }
 
-    /* 文本信息框（左侧天蓝竖线） */
+    /* 文本信息框：更柔和的天蓝配色 */
     .got-msg{
-      background:var(--sky-bg); border-left:4px solid var(--sky-line);
-      border-radius:10px; padding:10px 12px; color:var(--sky-text); margin:0;
+      background:#EEF5FF;            /* 软天蓝底 */
+      border-left:4px solid #3B82F6; /* 蓝-500 竖线 */
+      border-radius:10px;
+      padding:10px 12px;
+      color:#0F3D91;                 /* 深一点的字色 */
+      margin:0;
     }
 
     /* 四图宫格 */
@@ -96,20 +119,21 @@
 
     <!-- Rationale：T / High / Low / Text -->
     <div class="got-rbox">
+      <div class="got-head">Predicted Result</div> <!-- 新增角标 -->
       <div class="got-row">
         <div class="got-key">T</div>
         <div><span id="tval">0</span> s</div>
       </div>
       <div class="got-row">
-        <div class="got-key">High-level</div>
+        <div class="got-key">High-level Speech Acts</div>
         <div><span id="hi" class="chip">—</span></div>
       </div>
       <div class="got-row">
-        <div class="got-key">Low-level</div>
+        <div class="got-key">Low-level Behavior</div>
         <div><span id="lo" class="chip">—</span></div>
       </div>
       <div class="got-row">
-        <div class="got-key">Text</div>
+        <div class="got-key">Rationale Text</div>
         <div><div id="rat" class="got-msg">—</div></div>
       </div>
     </div>
@@ -117,7 +141,7 @@
     <!-- 四图：Raw/Updated × Weight/Node -->
     <div class="got-grid">
       <figure class="got-card">
-        <figcaption class="got-cap">Raw · Weight matrix</figcaption>
+        <figcaption class="got-cap">Raw · Prior edge-weight adjacency heatmap</figcaption>
         <img id="img-raw-w" class="got-img" src="assets/alpha_raw_weight/000.png" alt="Raw weight matrix at t=0" loading="lazy" />
       </figure>
       <figure class="got-card">
@@ -125,7 +149,7 @@
         <img id="img-raw-n" class="got-img" src="assets/alpha_raw_node/000.png" alt="Raw node graph at t=0" loading="lazy" />
       </figure>
       <figure class="got-card">
-        <figcaption class="got-cap">Updated · Weight matrix</figcaption>
+        <figcaption class="got-cap">Updated · Attention weight matrix heatmap</figcaption>
         <img id="img-upd-w" class="got-img" src="assets/alpha_upd_weight/000.png" alt="Updated weight matrix at t=0" loading="lazy" />
       </figure>
       <figure class="got-card">
